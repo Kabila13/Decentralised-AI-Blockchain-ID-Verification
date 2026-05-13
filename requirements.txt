@@ -4,3 +4,4 @@ web3==5.31.3
 tensorflow-cpu==2.15.0
 tf-keras==2.15.1
 numpy==1.26.4
+protobuf==4.23.4
