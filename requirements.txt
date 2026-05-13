@@ -1,5 +1,7 @@
-opencv-python-headless
-deepface
-web3
-pinata
-tf-keras
+opencv-python-headless==4.8.1.78
+deepface==0.0.79
+web3==6.15.1
+pinata==2.5.5
+tensorflow==2.13.0
+tf-keras==2.13.0
+numpy==1.24.3
