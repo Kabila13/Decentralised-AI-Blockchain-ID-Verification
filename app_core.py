@@ -15,7 +15,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1" # Forces CPU mode for stability
 ID_IMAGE = 'id.jpg'
 SELFIE_IMAGE = 'selfie.jpg'
 GANACHE_URL = "http://127.0.0.1:7545"
-CONTRACT_ADDRESS = "0xe66B8438dF44b071217572a0aA54C6AcdA963701"
+CONTRACT_ADDRESS = "0x55474ec8beb34d6e81af8381f326390fb428968c"
 
 # Connect to the Blockchain Ledger
 try:
