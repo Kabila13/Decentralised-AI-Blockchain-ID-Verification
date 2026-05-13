@@ -96,3 +96,5 @@ if __name__ == "__main__":
     else:
         print("\n❌ SECURITY ALERT: Biometric Verification Failed.")
         print("Blockchain anchoring aborted for security.")
+
+SECRET_SALT = "SecureID_Internal_2026"
