@@ -1,4 +1,5 @@
 flask
+streamlit==1.35.0
 web3
 tensorflow==2.13.1
 protobuf==4.23.4
