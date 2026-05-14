@@ -25,13 +25,16 @@ CONTRACT_ADDRESS = "0xe19d48797873AC54BCdc48A66fE2fa3b84E1e29d"
 w3 = Web3(Web3.HTTPProvider(GANACHE_URL))
 truffle_file = os.path.join('build', 'contracts', 'Verification.json')
 
+contract = None
+account = None
 try:
+    truffle_file = os.path.join('build', 'contracts', 'Verification.json')
     with open(truffle_file) as f:
         abi = json.load(f)['abi']
     contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=abi)
     account = w3.eth.accounts[0]
 except Exception as e:
-    st.error(f"Blockchain Connection Error: {e}")
+    pass  # Silently continue, app loads without blockchain
 
 # --- 2. STORAGE & PRIVACY ---
 def upload_to_ipfs(file_path):
