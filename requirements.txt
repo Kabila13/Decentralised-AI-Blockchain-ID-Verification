@@ -3,6 +3,5 @@ deepface
 opencv-python-headless
 easyocr
 web3==5.31.3
-mediapipe
 requests
 pandas
