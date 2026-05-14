@@ -4,4 +4,3 @@ opencv-python-headless
 web3==5.31.3
 requests
 pandas
-some-package==x.x.x
