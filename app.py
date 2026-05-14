@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3" # Hides heavy TensorFlow logs
 
 # --- 1. BLOCKCHAIN (GANACHE) CONNECTION ---
-GANACHE_URL = "http://127.0.0.1:7545"
+GANACHE_URL = "https://ethereum-sepolia-rpc.publicnode.com"
 CONTRACT_ADDRESS = "0xe19d48797873AC54BCdc48A66fE2fa3b84E1e29d"
 
 w3 = Web3(Web3.HTTPProvider(GANACHE_URL))
