@@ -21,4 +21,4 @@ RUN pip install --upgrade pip && \
     pip install requests pandas && \
     pip install protobuf==3.20.3
 
-CMD ["streamlit", "run", "app.py", "--server.port=10000", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
