@@ -3,7 +3,7 @@ opencv-python-headless
 web3==5.31.3
 requests
 pandas
-tensorflow-cpu==2.15.0
+tensorflow-cpu
 tf-keras
 numpy<2.0
 deepface==0.0.93
