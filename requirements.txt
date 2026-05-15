@@ -4,3 +4,4 @@ web3
 requests
 pandas
 numpy
+anthropic
