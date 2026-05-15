@@ -7,8 +7,6 @@ import numpy as np
 from web3 import Web3
 import json
 import pandas as pd
-import base64
-import anthropic
 
 warnings.filterwarnings("ignore")
 
@@ -45,7 +43,7 @@ def generate_privacy_hash(name, id_num, ipfs_link):
     combined_data = f"{name}{id_num}{ipfs_link}{SECRET_SALT}"
     return w3.solidity_keccak(['string'], [combined_data])
 
-# --- PHASE 1: BIOMETRIC VERIFICATION ---
+# --- FACE VERIFICATION (OpenCV only, no tensorflow) ---
 def verify_biometrics(id_path, selfie_path):
     try:
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -56,12 +54,13 @@ def verify_biometrics(id_path, selfie_path):
         faces1 = face_cascade.detectMultiScale(img1, 1.1, 4)
         faces2 = face_cascade.detectMultiScale(img2, 1.1, 4)
         if len(faces1) == 0 or len(faces2) == 0:
+            # No face detected, do pixel similarity
             img1r = cv2.resize(img1, (100, 100)).astype(float)
             img2r = cv2.resize(img2, (100, 100)).astype(float)
         else:
-            x, y, w, h = faces1[0]
+            x,y,w,h = faces1[0]
             face1 = cv2.resize(img1[y:y+h, x:x+w], (100, 100)).astype(float)
-            x, y, w, h = faces2[0]
+            x,y,w,h = faces2[0]
             face2 = cv2.resize(img2[y:y+h, x:x+w], (100, 100)).astype(float)
             img1r, img2r = face1, face2
         diff = np.mean(np.abs(img1r - img2r)) / 255.0
@@ -69,59 +68,6 @@ def verify_biometrics(id_path, selfie_path):
     except Exception as e:
         st.error(f"Error: {e}")
         return False, 1.0
-
-# ─────────────────────────────────────────────
-# --- PHASE 2: AI OCR (Claude Vision) ---  ✅
-# ─────────────────────────────────────────────
-def run_ai_ocr(image_path: str) -> dict:
-    with open(image_path, "rb") as f:
-        img_data = base64.standard_b64encode(f.read()).decode("utf-8")
-
-    ext = image_path.lower().split(".")[-1]
-    media_type = "image/jpeg" if ext in ["jpg", "jpeg"] else "image/png"
-
-    try:
-        client = anthropic.Anthropic(api_key=st.secrets.get("ANTHROPIC_API_KEY", os.environ.get("ANTHROPIC_API_KEY", "")))
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=1024,
-            system="""You are an OCR engine for Indian identity documents like Aadhaar, PAN, Passport, Driving License.
-Extract all visible text fields from the image.
-Return ONLY a valid JSON object (no markdown, no explanation):
-{
-  "name": "",
-  "dob": "",
-  "id_number": "",
-  "address": "",
-  "gender": "",
-  "document_type": ""
-}
-Use null for any field not visible.""",
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": media_type,
-                            "data": img_data
-                        }
-                    },
-                    {
-                        "type": "text",
-                        "text": "Extract all text fields from this identity document."
-                    }
-                ]
-            }]
-        )
-        raw = message.content[0].text.strip()
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return {"name": "Unknown", "id_number": "000000000000", "raw_ocr": raw}
-    except Exception as e:
-        st.error(f"OCR Error: {e}")
-        return {"name": "Unknown", "id_number": "000000000000"}
 
 # --- UI ---
 st.set_page_config(page_title="SecureID Pro", layout="wide")
@@ -144,44 +90,22 @@ if st.button("🚀 Execute Neural Verification"):
         with open("id.jpg", "wb") as f: f.write(id_file.getbuffer())
         with open("selfie.jpg", "wb") as f: f.write(selfie_file.getbuffer())
 
-        # ── Phase 1: Biometric Analysis ──
         st.write("🧠 Phase 1: Biometric Analysis...")
         is_match, dist = verify_biometrics("id.jpg", "selfie.jpg")
 
         if is_match:
-
-            # ── Phase 2: AI OCR ──────────────────── ✅ NEW
-            st.write("📄 Phase 2: AI OCR Reading...")
-            ocr_data = run_ai_ocr("id.jpg")
-            id_num    = ocr_data.get("id_number") or "000000000000"
-            name      = ocr_data.get("name")      or "Unknown"
-
-            with st.expander("🔍 OCR Extracted Data", expanded=True):
-                st.json(ocr_data)
-
-            # ── Phase 3: Store on IPFS ───────────────
-            st.write("📤 Phase 3: Storing Evidence on IPFS...")
+            id_num = "73386010"
+            st.write("📤 Phase 2: Storing Evidence on IPFS...")
             cid = upload_to_ipfs("id.jpg")
-
-            # ── Phase 4: Anchor Privacy Seal ─────────
-            st.write("🔐 Phase 4: Anchoring Privacy Seal...")
-            p_hash = generate_privacy_hash(name, id_num, cid)
-
+            st.write("🔐 Phase 3: Anchoring Privacy Seal...")
+            p_hash = generate_privacy_hash("Kabil", id_num, cid)
             try:
                 if contract and account:
                     tx = contract.functions.anchorIdentity(p_hash).transact({'from': account})
                     receipt = w3.eth.wait_for_transaction_receipt(tx)
-                    st.session_state.history.append({
-                        "Name": name,
-                        "HashedID": p_hash.hex()[:12] + "...",
-                        "Block": receipt.blockNumber
-                    })
+                    st.session_state.history.append({"HashedID": p_hash.hex()[:12]+"...", "Block": receipt.blockNumber})
                 else:
-                    st.session_state.history.append({
-                        "Name": name,
-                        "HashedID": p_hash.hex()[:12] + "...",
-                        "Block": "Simulated"
-                    })
+                    st.session_state.history.append({"HashedID": p_hash.hex()[:12]+"...", "Block": "Simulated"})
                 st.success(f"✅ VERIFIED! (Match Distance: {dist:.2f})")
                 st.balloons()
             except Exception as e:
